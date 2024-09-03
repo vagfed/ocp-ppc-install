@@ -1,0 +1,9 @@
+# Ignore specific installation data
+OCP_DATA/
+
+# Ignore ocp binaries
+ocp/
+
+# Do not expose a pullsecret!
+vars/pullsecret
+

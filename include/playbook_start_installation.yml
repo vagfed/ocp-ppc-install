@@ -1,0 +1,70 @@
+---
+- name: Start installation
+  hosts: localhost
+  gather_facts: no
+  collections:
+      - ibm.power_hmc
+
+  connection: local
+  become: false
+
+  vars_files:
+    - ../vars/hmcs.yml
+    - ../vars/network.yml
+    - ../vars/lpars.yml
+    - ../vars/nodes.yml
+    - ../vars/ocp.yml
+
+  tasks:
+  - name: Boot all LPARs and start network installation
+    hmc_command:
+      hmc_host: "{{ hmc[lpars[item['lpar_name']].hmc].ip }}"
+      hmc_auth: "{{ hmc[lpars[item['lpar_name']].hmc].hmc_auth }}"
+      cmd: >
+        lpar_netboot -x -f -t ent -s auto -d auto
+        -S {{ pxe_server }}
+        -G {{ gateway }}
+        -C {{ lpars[item['lpar_name']].ip }}
+        -K {{ netmask }}
+        {{ item['lpar_name'] }}
+        {{ lpars[item['lpar_name']].profile | default('default_profile') }}
+        {{ lpars[item['lpar_name']].managed_system }}
+    loop: "{{ bootnode + masters + workers }}"
+    connection: local
+
+  - name: Show next steps
+    debug:
+      msg: 
+        - "Master node installation has started."
+        - "Workers will wait for master nodes' full setup"
+        - "Monitor master nodes installation with the following command:"
+        - "ocp/openshift-install --dir OCP_DATA/{{ clustername }}/setup wait-for bootstrap-complete --log-level=info"
+
+  - name: Wait for bootsrap to complete (see comment on previous step, normally it takes around 30 minutes)
+    shell: ../ocp/openshift-install --dir ../OCP_DATA/{{ clustername }}/setup wait-for bootstrap-complete --log-level=info
+    async: 7200  # Wait up to 2 hours, normally much less, say 30 minutes
+    poll: 0
+    register: ocp_async_result
+
+  - name: Poll for bootstrap completion every 5 minutes
+    async_status:
+      jid: "{{ ocp_async_result.ansible_job_id }}"
+    register: job_result
+    until: job_result.finished
+    retries: 24       # Number of retries
+    delay: 300         # Delay between retries (seconds)
+
+  - name: Bootsrap completed. Bootstrap node may be powered off.
+    debug:
+      msg:
+        - "Started: {{ job_result.start }}"
+        - "Ended  : {{ job_result.end }}"
+
+  - name: Software installation has been fully started
+    debug:
+      msg:
+        - "All nodes has been activated and installation has been started"
+        - "Wait for master nodes to be Ready: oc get nodes"
+        - 'Remember to set KUBECONFIG shell variable to OCP_DATA/{{ clustername }}/setup/auth/kubeconfig'
+        - "Workers will ask to join the cluster"
+        - "Next steps will monitor worker nodes and accept them into the cluster"

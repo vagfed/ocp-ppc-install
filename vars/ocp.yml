@@ -1,0 +1,28 @@
+#
+# OCP configuration
+#
+
+# OCP will use domain <clusterdomain>.<basedomain>
+basedomain: power.seg.it.ibm.com		# base domain of cluster
+clustername: ocptest                            # name of OCP cluster
+
+# Internal OCP networks
+clusternetwork: 10.128.0.0/14
+servicenetwork: 172.80.0.0/16
+
+# External load balancer
+balancer: 172.17.227.67
+
+# Proxy server for all egress traffic (required for proxied installation)
+# Uncomment only if needed, all lines are required
+# NOTE: add to no proxy all local subnets and local domains or everything will go through proxy
+#       Proxy is a cluster wide setup and includes also not HTTP/HTTPS ports (ex. 2379)
+#proxy:
+#  http: "http://172.17.227.57:3128" # syntax is "http://<username>:<pswd>@<ip>:<port>"
+#  https: "http://172.17.227.57:3128" # syntax is "https://<username>:<pswd>@<ip>:<port>"
+#  noproxy: [172.17.224.0/19,.power.seg.it.ibm.com]  # comma separated list of strings
+
+
+# OpenShift installer and client. Change only if you need a specific one!
+ocp_installer: https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/stable/openshift-install-linux.tar.gz
+ocp_client: https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/latest/openshift-client-linux.tar.gz

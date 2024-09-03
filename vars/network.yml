@@ -1,0 +1,22 @@
+# 
+# Network configuration for the LPAR
+#
+
+# This must be the IP address of the current server.
+# This machine will be configured as BOOTP, TFTP, HTTP server serving installation
+pxe_server: 172.17.227.57
+
+# LPAR's network configuration. 
+# You can use https://www.calculator.net/ip-subnet-calculator.html
+# In the sample the LPAR has IP 172.17.227.58/19
+# - subnet is the network address (19 bits if IP) --> 172.17.224.0
+# - netmask is the subnet mask --> 255.255.224.0
+netmask: 255.255.224.0    # netmask of SNO LPAR's IP
+subnet: 172.17.224.0      # subnet name of SNO LPAR (calculate with https://www.calculator.net/ip-subnet-calculator.html)
+gateway: 172.17.224.1     # default gateway
+
+# Name server to use
+nameserver: 172.17.224.5
+
+
+

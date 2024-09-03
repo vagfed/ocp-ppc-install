@@ -1,0 +1,60 @@
+---
+- name: DNS check
+  hosts: localhost
+  gather_facts: no
+  connection: local
+
+  vars_files:
+    - ../vars/nodes.yml
+    - ../vars/lpars.yml
+    - ../vars/ocp.yml
+    - ../vars/network.yml
+
+  tasks:
+  - name: Defined names of all OCP nodes
+    debug:
+      msg: '{{ item["hostname"] }}'
+    loop: "{{ bootnode + masters + workers }}"
+
+  - name: Check DNS names 
+    fail:
+      msg: 
+        - "LPAR {{ item['lpar_name'] }} with hostname {{ item['hostname'] }} is not correctly defined in DNS"
+        - "Expected: {{ item['hostname'] + '.' + basedomain }} -> {{ lpars[item['lpar_name']].ip }}"
+    loop: "{{ bootnode + masters + workers }}"
+    when: lookup('community.general.dig', item['hostname'] + '.' + basedomain) != lpars[item['lpar_name']].ip
+
+  - name: Check DNS reverse resolution 
+    fail:
+      msg: 
+        - LPAR "{{ item['lpar_name'] }} with IP {{ lpars[item['lpar_name']].ip }} has no DNS name"
+    loop: "{{ bootnode + masters + workers }}"
+    when: lookup('community.general.dig', lpars[item['lpar_name']].ip + '/PTR' ) == 'NXDOMAIN'
+
+  - name: Check DNS "api.{{ clustername }}.{{ basedomain }}"
+    fail:
+      msg: 
+        - "api.{{ clustername }}.{{ basedomain }} does not resolve to balancer"
+        - "Expected: api.{{ clustername }}.{{ basedomain }} --> {{ balancer }}"
+    when: lookup('community.general.dig', 'api.' + clustername + '.' + basedomain) != balancer
+
+  - name: Check DNS "api-int.{{ clustername }}.{{ basedomain }}"
+    fail:
+      msg: 
+        - "api-int.{{ clustername }}.{{ basedomain }} does not resolve to balancer"
+        - "Expected: api-int.{{ clustername }}.{{ basedomain }} --> {{ balancer }}"
+    when: lookup('community.general.dig', 'api-int.' + clustername + '.' + basedomain) != balancer
+
+  - name: Check DNS "*.apps.{{ clustername }}.{{ basedomain }}"
+    fail:
+      msg: 
+        - "*.apps.{{ clustername }}.{{ basedomain }} does not resolve to balancer"
+        - "Expected: *.apps.{{ clustername }}.{{ basedomain }} --> {{ balancer }}"
+    when: lookup('community.general.dig', '*.apps.' + clustername + '.' + basedomain) != balancer
+
+  - name: Show reverse resolution
+    debug:
+      msg:
+        - "Balancer should have a reverse resolution but it is not mandatory" 
+        - "Balancer currently is {{ balancer }} and resolves to {{ lookup('community.general.dig', balancer + '/PTR' ) }}"
+

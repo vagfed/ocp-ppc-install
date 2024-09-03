@@ -1,0 +1,39 @@
+---
+- name: Store known hosts of all HMCs
+  hosts: localhost
+  gather_facts: yes   # Required to identify user running command
+
+  connection: local
+  become: false
+
+  vars_files:
+    - ../vars/hmcs.yml
+    - ../vars/lpars.yml
+
+  tasks:
+    - name: Detect HMC IPs
+      set_fact:
+        hmc_names:  "{{ hmc_ip | default([]) + [item.value.hmc] }}"
+      loop: "{{ lookup('ansible.builtin.dict', lpars) }}"
+
+    - name: Scan ssh public keys of HMC
+      shell: "ssh-keyscan {{ hmc[item].ip }}"
+      loop: "{{ hmc_names | unique() }}"
+      register: ssh_key
+
+    - name: Collect all SSH keys
+      set_fact:
+        hmc_keys: "{{ hmc_keys | default([]) + item.stdout_lines }}"
+      loop: "{{ ssh_key.results }}"
+
+    - name: Make sure that .ssh exists in {{ ansible_env.HOME }}
+      ansible.builtin.file:
+        path: "{{ ansible_env.HOME }}/.ssh"
+        state: directory
+        mode: '0700'
+
+    - name: Update known hosts for HMC
+      known_hosts:
+        name: "{{ item.split(' ')[0] }}"
+        key: "{{ item }}"
+      loop: "{{ hmc_keys }}"

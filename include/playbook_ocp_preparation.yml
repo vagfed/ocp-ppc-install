@@ -1,0 +1,163 @@
+---
+- name: Setup OCP installation
+  hosts: localhost
+  gather_facts: no
+  connection: local
+  become: false
+
+  vars_files:
+    - ../vars/ocp.yml
+
+  vars:
+    base: ../OCP_DATA/{{ clustername }}
+
+  tasks:
+  - name: Clean directory for OCP data ({{ base }})
+    ansible.builtin.file:
+      path: "{{ base }}"
+      state: absent
+
+  - name: Create directory for OCP data ({{ base }})
+    ansible.builtin.file:
+      path: "{{ base }}"
+      state: directory
+      mode: '0755'   
+
+  - name: Create SSH key pair for OCP
+    shell: ssh-keygen -q -t rsa -N "" -f {{ base }}/ocp-rsa <<< y
+
+  - name: Read public key
+    set_fact:
+      pubkey: "{{ lookup('file', '{{ base }}/ocp-rsa.pub')|string }}"
+
+  - name: Create setup directory
+    ansible.builtin.file:
+      path: "{{ base }}/setup"
+      state: directory
+      mode: '0755'
+
+  - name: Load pull secret
+    set_fact:
+      pullsecret: "{{ lookup('file', '../vars/pullsecret')|string }}"
+
+  - name: Unpack OpenShift client
+    command: tar -xf openshift-client-linux.tar.gz
+    args:
+      chdir: ../ocp
+      creates: ../ocp/oc
+
+  - name: Unpack OpenShift installer
+    command: tar -xf openshift-installer-stable.tgz
+    args:
+      chdir: ../ocp
+      creates: ../ocp/openshift-install
+
+  - name: Create install-config.yaml
+    template: 
+      src: ../templates/install_config.j2
+      dest: "{{ base }}/setup/install-config.yaml"
+
+  - name: Make a install-config.yaml backup
+    copy:
+      src: "{{ base }}/setup/install-config.yaml"
+      dest: "{{ base }}/install-config.yaml.backup"
+
+  - name: Create manifests
+    command: ../ocp/openshift-install create manifests --dir {{ base }}/setup
+
+  - name: Make masters not schedulable
+    replace:
+      path: "{{ base }}/setup/manifests/cluster-scheduler-02-config.yml"
+      regexp: '(\s+)mastersSchedulable:.*$'
+      replace: '\1mastersSchedulable: false'
+
+  - name: Enable multipath on masters
+    copy:
+      dest: "{{ base }}/setup/manifests/99_openshift-machineconfig_master-mp.yaml"
+      content: |
+        apiVersion: machineconfiguration.openshift.io/v1
+        kind: MachineConfig
+        metadata:
+          labels:
+            machineconfiguration.openshift.io/role: "master"
+          name: 99-master-kargs-mpath
+        spec:
+          kernelArguments:
+            - 'rd.multipath=default'
+            - 'root=/dev/disk/by-label/dm-mpath-root'
+
+  - name: Enable multipath on workers
+    copy:
+      dest: "{{ base }}/setup/manifests/99_openshift-machineconfig_worker-mp.yaml"
+      content: |
+        apiVersion: machineconfiguration.openshift.io/v1
+        kind: MachineConfig
+        metadata:
+          labels:
+            machineconfiguration.openshift.io/role: "worker"
+          name: 99-worker-kargs-mpath
+        spec:
+          kernelArguments:
+            - 'rd.multipath=default'
+            - 'root=/dev/disk/by-label/dm-mpath-root'
+
+  - name: Use custom YAML files in ocp_custom_yaml directory
+    copy:
+      src: ../ocp_custom_yaml/
+      dest: "{{ base }}/setup/manifests/"
+
+  - name: Remove setup-backup directory
+    ansible.builtin.file:
+      path: "{{ base }}/setup-backup"
+      state: absent
+
+  - name: Make a backup of setup directory before ignition generation
+    copy:
+      src:  "{{ base }}/setup/"
+      dest: "{{ base }}/setup-backup/"
+
+  - name: Create ignition configs (consumes content of {{ base }}/setup directory)
+    command:  ../ocp/openshift-install --dir {{ base }}/setup create ignition-configs
+
+  - name: Create butane file for disk boot
+    copy:
+      dest: "{{ base }}/setup/boot-from-sda.fcc"
+      content: |
+        variant: fcos
+        version: 1.1.0
+
+        storage:
+          files:
+            - path: /usr/local/bin/post-install-hook
+              mode: 0755
+              contents:
+                inline: |
+                  #!/bin/bash
+                  bootlist -m normal -o sda
+
+        systemd:
+          units:
+            - name: post-install-hook.service
+              enabled: true
+              contents: |
+                [Unit]
+                Description=Run after install
+                After=coreos-installer.service
+                Before=coreos-installer.target
+        
+                [Service]
+                Type=oneshot
+                ExecStart=/usr/local/bin/post-install-hook
+
+                [Install]
+                RequiredBy=coreos-installer.target
+
+  - name: Create ignition file for disk boot
+    shell: ../butane < {{ base }}/setup/boot-from-sda.fcc > {{ base }}/setup/boot-from-sda.ign
+
+
+
+  
+
+
+

@@ -1,0 +1,38 @@
+---
+- name: Setup Web server
+  hosts: localhost
+  gather_facts: no
+  connection: local
+
+  vars_files:
+    - ../vars/network.yml
+    - ../vars/nodes.yml
+    - ../vars/ocp.yml
+
+  vars:
+    base: ../OCP_DATA/{{ clustername }}
+
+  tasks:
+  - name: Copy bootnode ignition
+    ansible.builtin.copy:
+      src: "{{ base }}/setup/bootstrap.ign"
+      dest: /var/www/html/{{ item['hostname'] }}-boot-coreos.ign
+    loop: "{{ bootnode }}"
+
+  - name: Copy master ignition
+    ansible.builtin.copy:
+      src: "{{ base }}/setup/master.ign"
+      dest: /var/www/html/{{ item['hostname'] }}-boot-coreos.ign
+    loop: "{{ masters }}"
+
+  - name: Copy worker ignition
+    ansible.builtin.copy:
+      src: "{{ base }}/setup/worker.ign"
+      dest: /var/www/html/{{ item['hostname'] }}-boot-coreos.ign
+    loop: "{{ workers }}"
+
+  - name: Copy sda boot ignition
+    ansible.builtin.copy:
+      src: "{{ base }}/setup/boot-from-sda.ign"
+      dest: /var/www/html/boot-from-sda.ign
+

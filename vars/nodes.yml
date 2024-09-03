@@ -1,0 +1,17 @@
+bootnode:
+  - lpar_name: TFV-OCPTEMP-boot
+    hostname: tfv-ocptemp-boot
+
+masters:
+  - lpar_name: TFV-OCPTEMP-m1
+    hostname: tfv-ocptemp-m1
+  - lpar_name: TFV-OCPTEMP-m2
+    hostname: tfv-ocptemp-m2
+  - lpar_name: TFV-OCPTEMP-m3
+    hostname: tfv-ocptemp-m3
+
+workers:
+  - lpar_name: TFV-OCPTEMP-w1
+    hostname: tfv-ocptemp-w1
+  - lpar_name: TFV-OCPTEMP-w2
+    hostname: tfv-ocptemp-w2

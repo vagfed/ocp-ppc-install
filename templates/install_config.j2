@@ -1,0 +1,32 @@
+apiVersion: v1
+baseDomain: {{ basedomain }}
+{% if proxy is defined %}
+proxy:
+  httpProxy: {{ proxy.http }}
+  httpsProxy: {{ proxy.https }}
+{% if proxy.noproxy|length > 0 %}
+  noProxy: {{ proxy.noproxy|join(',') }}
+{% else %}
+  noProxy: 
+{% endif %}
+{% endif %}
+compute:
+- name: worker
+  replicas: 0
+controlPlane:
+  name: master
+  replicas: 3
+metadata:
+  name: {{ clustername }}
+networking:
+  clusterNetwork:
+  - cidr: {{ clusternetwork }}
+    hostPrefix: 23
+  networkType: OVNKubernetes
+  serviceNetwork:
+  - {{ servicenetwork }}
+platform:
+  none: {}
+pullSecret: '{{ pullsecret }}'
+sshKey: |
+  {{ pubkey }}

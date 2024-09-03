@@ -1,0 +1,58 @@
+---
+
+# It is assumed that variable "mac_address" has been addd to lpar dictionary
+
+- name: Setup DHCP, TFTP and GRUB
+  hosts: localhost
+  gather_facts: no
+  connection: local
+  become: true
+
+  vars_files:
+    - ../vars/network.yml
+    - ../vars/nodes.yml
+    - ../vars/lpars.yml
+#    - ../vars/debug_mac.yml    # ONLY FOR DEBUG PURPOSES!!!!
+
+  tasks:
+  - name: Setup DHCP on control node
+    blockinfile:
+      block: |
+        host {{ item['hostname'] }} {
+             hardware ethernet {{ mac_address[item['lpar_name']] }};
+             fixed-address {{ lpars[item['lpar_name']].ip }};
+             option host-name "{{ item['hostname'] }}";
+             allow booting;
+        }
+      path: /etc/dhcp/dhcpd.conf
+      marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item['hostname'] }}"
+    loop: "{{ bootnode + masters + workers }}"
+    register: dhcp_out
+
+  - name: Restart DHCP
+    service:
+      name: dhcpd
+      state: restarted
+    when: dhcp_out.changed
+
+  - name: Setup tftpboot Grub
+    blockinfile:
+      block: |
+        if [ ${net_default_mac} == {{ mac_address[item['lpar_name']] }} ]; then
+        default=0
+        fallback=1
+        timeout=1
+        menuentry "{{ item['hostname'] }}" {
+        echo "Loading kernel ...."
+        linux ocp-latest/rhcos-live-kernel-ppc64le ip={{ lpars[item['lpar_name']].ip }}::{{ gateway }}:{{ netmask }}:{{ item['hostname'] }}:insteth0:none nameserver={{ nameserver }} ifname=insteth0:{{ mac_address[item['lpar_name']] }} nameserver=1.1.1.1 rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=/dev/sda ignition.platform.id=metal ignition.firstboot coreos.live.rootfs_url=http://{{ pxe_server }}/ocp-latest//rhcos-live-rootfs.ppc64le.img coreos.inst.ignition_url=http://{{ pxe_server }}/{{ item['hostname'] }}-boot-coreos.ign ignition.config.url=http://{{ pxe_server }}/boot-from-sda.ign
+        echo "Loading initrd..."
+        initrd ocp-latest/rhcos-live-initramfs.ppc64le.img
+        }
+        fi
+      marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item['hostname'] }}"
+      path: /var/lib/tftpboot/boot/grub2/grub.cfg
+      create: true
+    loop: "{{ bootnode + masters + workers }}"
+
+
+

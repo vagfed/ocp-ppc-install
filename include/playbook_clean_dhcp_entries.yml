@@ -1,0 +1,26 @@
+---
+- name: Clean DHCP entry
+  hosts: localhost
+  gather_facts: no
+  connection: local
+  become: true
+
+  vars_files:
+    - ../vars/lpars.yml
+    - ../vars/nodes.yml
+
+  tasks:
+  - name: Remove LPAR data from DHCP configuration file
+    blockinfile:
+      path: /etc/dhcp/dhcpd.conf
+      marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item['hostname'] }}"
+      state: absent
+    loop: "{{ bootnode + masters + workers }}"
+    register: dhcp_out
+
+  - name: Restart DHCP
+    service:
+      name: dhcpd
+      state: restarted
+    when: dhcp_out.changed
+

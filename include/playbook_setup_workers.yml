@@ -1,0 +1,36 @@
+---
+- name: Accept workers into cluster
+  hosts: localhost
+  gather_facts: false
+  connection: local
+
+  vars_files:
+    - ../vars/ocp.yml
+    - ../vars/nodes.yml
+
+  tasks:
+    - name: Include tasks
+      include_tasks: tasks_setup_worker.yml
+      vars:
+        max_attempts: 24
+        retry_delay: 300
+
+    - name: Get running workers
+      shell:
+        cmd: |
+          ../ocp/oc get nodes | grep " Ready" | grep -v master | wc -l
+      environment:
+        KUBECONFIG: ../OCP_DATA/{{ clustername }}/setup/auth/kubeconfig
+      register: command_output
+      ignore_errors: true
+
+    - name: Task completed
+      debug:
+        msg:
+          - "Ready workers: {{ command_output.stdout | int }}/{{ workers | length }}"
+          - "Cluster operators start deployment on available workers"
+          - 'Monitor tasks with: oc get co'
+          - 'Remember to set KUBECONFIG shell variable to OCP_DATA/{{ clustername }}/setup/auth/kubeconfig'
+          - "Console will be available when all cluster operators will be ready"
+          - "Console URL will be https://console-openshift-console.apps.{{ clustername }}.{{ basedomain }}"
+

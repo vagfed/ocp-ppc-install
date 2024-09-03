@@ -1,0 +1,38 @@
+---
+- name: Accept all Pending CSRs of workers until completion
+  block:
+    - name: Increment attempt counter
+      set_fact:
+        attempt_number: "{{ attempt_number | d(0) | int + 1 }}"
+  
+    - name: Accept pending CSRs
+      shell:
+        cmd: ./worker_csr.sh
+      environment:
+        KUBECONFIG: ../OCP_DATA/{{ clustername }}/setup/auth/kubeconfig
+
+    - name: Get running workers
+      shell:
+        cmd: |
+          ../ocp/oc get nodes | grep " Ready" | grep -v master | wc -l
+      environment:
+        KUBECONFIG: ../OCP_DATA/{{ clustername }}/setup/auth/kubeconfig
+      register: command_output
+      ignore_errors: true
+
+    - name: "Check completion - IT WILL FAIL AND WILL BE RETRIED MULTIPLE TIMES"
+      shell: "[ {{ command_output.stdout | int }} -eq {{ workers | length }} ]"
+      changed_when: false
+
+  rescue:
+    - name: "Attempt: {{ attempt_number | int }}/{{ max_attempts }}. Ready workers: {{ command_output.stdout | int }}/{{ workers | length }}"
+      fail:
+        msg: Max attempt reached
+      when: attempt_number | int == max_attempts | int 
+
+    - name: Delay {{ retry_delay | int }} seconds
+      wait_for:
+        timeout: "{{ retry_delay | int }}"
+
+    - include_tasks: tasks_setup_worker.yml
+

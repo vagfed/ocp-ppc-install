@@ -1,0 +1,87 @@
+---
+- name: Download data from web
+  hosts: localhost
+  gather_facts: no
+  connection: local
+  become: no
+
+  vars_files:
+    - ../vars/ocp.yml
+
+  vars:
+    rhbaseurl: https://mirror.openshift.com/pub/openshift-v4/ppc64le/dependencies/rhcos/latest
+    kernel: "{{ rhbaseurl }}/rhcos-live-kernel-ppc64le"
+    initramfs: "{{ rhbaseurl }}/rhcos-live-initramfs.ppc64le.img"
+    rootfs: "{{ rhbaseurl }}/rhcos-live-rootfs.ppc64le.img"
+    use_proxy: false
+    http_proxy: dummy
+    https_proxy: dummy
+    
+  tasks:
+  - name: Detect proxy configuration
+    ansible.builtin.set_fact:
+      http_proxy: "{{ proxy.http }}"
+      https_proxy: "{{ proxy.https }}"
+      use_proxy: yes
+    when: proxy is defined and proxy.http is defined and proxy.https is defined
+
+  - name: Create ocp directory for binaries
+    ansible.builtin.file:
+      path: ../ocp
+      state: directory
+      mode: '0755'
+
+  - name: Download OpenShift installer
+    ansible.builtin.get_url:
+      url: "{{ ocp_installer }}"
+      dest:  ../ocp/openshift-installer-stable.tgz
+      use_proxy: "{{ use_proxy }}"
+    environment:
+      http_proxy: "{{ http_proxy }}"
+      https_proxy: "{{ https_proxy }}"
+
+  - name: Download OpenShift client
+    ansible.builtin.get_url:
+      url: "{{ ocp_client }}"
+      dest:  ../ocp/openshift-client-linux.tar.gz
+      use_proxy: "{{ use_proxy }}"
+    environment:
+      http_proxy: "{{ http_proxy }}"
+      https_proxy: "{{ https_proxy }}"
+
+  - name: Create image directory
+    ansible.builtin.file:
+      path: /var/lib/tftpboot/ocp-latest
+      state: directory
+      mode: '0755'
+    become: true
+
+  - name: Download boot images
+    ansible.builtin.get_url:
+      url: "{{ item }}"
+      dest: /var/lib/tftpboot/ocp-latest/{{ item | basename }}
+      use_proxy: "{{ use_proxy }}"
+    loop:
+      - "{{ kernel }}"
+      - "{{ initramfs }}"
+    environment:
+      http_proxy: "{{ http_proxy }}"
+      https_proxy: "{{ https_proxy }}"
+    become: yes
+
+  - name: Create image directory
+    ansible.builtin.file:
+      path: /var/www/html/ocp-latest
+      state: directory
+      mode: '0755'
+    become: yes
+
+  - name: Download RHCOS root filesystem
+    ansible.builtin.get_url:
+      url: "{{ rootfs }}"
+      dest:  /var/www/html/ocp-latest/{{ rootfs | basename }}
+      use_proxy: "{{ use_proxy }}"
+    environment:
+      http_proxy: "{{ http_proxy }}"
+      https_proxy: "{{ https_proxy }}"
+    become: yes

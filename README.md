@@ -1,10 +1,3 @@
-
-
-TO BE REVIEWED
-
-
-==============================================
-
 # ocp-ppc-install
 
 Automated install of a full OpenShift cluster on IBM Power LPAR using Ansible. Internet access is required for all LPARs involved, with the option of using an HTTP proxy (with optional user/password).

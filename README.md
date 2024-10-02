@@ -13,7 +13,7 @@ The scripts must be copied on an IBM Power LPAR configured with RHEL 9. Other Li
 
 All LPARs in the OCP cluster must be located in the same subnet. They will use BOOTP, TFTP and HTTP protocols to contact the LPAR from where installation is started using the scripts, so routing is required and no firewall should be present. 
 
-DHCP is not used and all LPARs will use fixed IP addresses. You will see DHCP daemon configured but it will answer only to BOOTP requests from well known MAC addresses. If your network already had DHCP running, you can savely use this procedure.
+DHCP is not used and all LPARs will use fixed IP addresses. You will see DHCP daemon configured but it will answer only to BOOTP requests from well known MAC addresses. If your network already had DHCP running, you can safely use this procedure.
 
 DNS resolution (direct and reverse) is required for all LPAR's IP addresses. A load balancer is mandatory and must be configured as described by OpenShift documentation.
 
@@ -35,9 +35,9 @@ The required packages are installed running (once) the script `setup_ansible.sh`
 ## OpenShift LPAR creation 
 You need to create in advance all LPARs that will be used during OCP installation. A minimum set includes 1 bootstrap, 3 masters and 2 workers. If you plan to use infrastructure nodes, they will be installed as workers and you will change them as infrastructure nodes after installation completes.
 
-Each LPAR must have only 1 Ethernet adapter during installation time. Scripts have been tested with virtual Ethernet but should work with vNIC or other adapters. Scripts do not support more than one adapter.
+Each LPAR must have only 1 Ethernet adapter during installation time. Scripts have been tested with virtual Ethernet but should work with vNIC or other adapters. This procedure do not support more than one adapter: if you need additional adapters, they must be addded after OpenSHift installation.
 
-Each LPAR should have only one disk during installation time. Scripts will use `sda` disk as target disk and then will enable multipath. If multiple disks are present, it is not possible to choose the installation disk, so add disks after installation has completed.
+Each LPAR must have only one disk during installation time. Scripts will use `sda` disk as target disk and then will enable multipath. If multiple disks are present, it is not possible to choose the installation disk, so add disks after installation has completed.
 
 ## Variable definitions
 
@@ -66,7 +66,6 @@ The `network.yml` file located into the `vars` directory provides the network co
 
 The `ocp.yml` file located into the `vars` directory provides the OpenShift installation data. You need to provide your pull secret.
 
-The installation requires you to obtain the OpenShift Linux Installer (`openshift-install-inux*.tar`) from RedHat. You need to go on https://access.redhat.com/downloads and login. Select  "OpenShift Container Platform" and download the file. The tar file needs to be extracted, the file `openshift-install` has to made executable and copied into the diretory `ocp`.
 
 ### network.yml
 This file defines the network configuration of all LPARs and the boot server (named `pxe_server`) from where you are running the scripts.
@@ -97,7 +96,7 @@ This file in not present when you clone the repository but you must provide it b
 ## Advanced tuning
 The procedure will use the variables you define to create an OpenShift installation file. The template of the file is defined in `template\install_config.j2` that can be edited for advanced configuration.
 
-You can further tune your environment by providing YAML file into `ocp_custom_yaml`. They will be passed during installation. In the repository there are two files required in environments that use Virtual Ethernet through Shared Ethernet Adapter for OCP LPARs.
+You can further tune your environment by providing YAML files into `ocp_custom_yaml`. They will be passed during installation. In the repository there are two files required in environments that use Virtual Ethernet through Shared Ethernet Adapter for OCP LPARs.
 
 Multipath I/O for disk will be enabled during installation and does not require any setup.
 
@@ -107,7 +106,7 @@ Once you have provided all variables and customization, installation is started 
 A successfull installation will require from 1 to 2 hours of time and will not require any user activity.
 
 ## Configuration files required to manage the cluster
-The `OCP_DATA` will contain one directory for each cluster you create. If you run multiple time the scripts with the same clustername, the data will be completely rewritten.
+The `OCP_DATA` directory will contain one directory for each cluster you create. If you run multiple time the scripts with the same clustername, the data will be completely rewritten.
 
 The `OCP_DATA/<clustername>` directory contains all the data useful to manage the OCP cluster and to know how it was installed. All files should be kept in a safe place. 
 - `install-config.yaml.backup`: the yaml file used to install the cluster
@@ -143,6 +142,8 @@ As `core` user you can use `sudo` to become `root` but you should avoid it unles
 OpenShift code is not always configured with the proper authorization to run on a LPAR with virtual cores (it depends on OpenShift version). If you see on the HMC an error code BA060030, installation will not continue. In that case use HMC to modify the LPAR to use dedicated cores and restart the installation.
 
 Once OpenShift is installed, you can power off the LPAR and change the configuration to use virtual cores. When you start the LPAR again OpenShift will correctly work.
+
+If you ever installed on the same LPAR an operating system capable of using virtual CPUs, the OopenShift installation will complewte successfully.
 
 
 ## Sample log output

@@ -21,7 +21,7 @@ metadata:
 networking:
   clusterNetwork:
   - cidr: {{ clusternetwork }}
-    hostPrefix: 23
+    hostPrefix: {{ clusternetworkprefix }}
   networkType: OVNKubernetes
   serviceNetwork:
   - {{ servicenetwork }}

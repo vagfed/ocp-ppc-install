@@ -34,3 +34,19 @@ lpars:
     ip: 172.17.227.66
     hmc: vhmc-p901
     managed_system: L922-seg
+  TFV-OCPTEMP-w3:
+    ip: 172.17.227.69
+    hmc: vhmc-p901
+    managed_system: L922-seg
+  TFV-OCPTEMP-i1:
+    ip: 172.17.227.70
+    hmc: vhmc-p901
+    managed_system: Server-9009-22A-SN78C3200
+  TFV-OCPTEMP-i2:
+    ip: 172.17.227.71
+    hmc: vhmc-p901
+    managed_system: Server-9009-22A-SN78C3200
+  TFV-OCPTEMP-i3:
+    ip: 172.17.227.72
+    hmc: vhmc-p901
+    managed_system: Server-9009-22A-SN78C3200

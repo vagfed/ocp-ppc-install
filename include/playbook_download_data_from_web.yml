@@ -40,6 +40,16 @@
       http_proxy: "{{ http_proxy }}"
       https_proxy: "{{ https_proxy }}"
 
+  - name: Download butane
+    ansible.builtin.get_url:
+      url: "{{ butane }}"
+      dest:  ../ocp/butane
+      mode: '0755'
+      use_proxy: "{{ use_proxy }}"
+    environment:
+      http_proxy: "{{ http_proxy }}"
+      https_proxy: "{{ https_proxy }}"
+
   - name: Download OpenShift client
     ansible.builtin.get_url:
       url: "{{ ocp_client }}"

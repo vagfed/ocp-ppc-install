@@ -153,7 +153,7 @@
                 RequiredBy=coreos-installer.target
 
   - name: Create ignition file for disk boot
-    shell: ../butane < {{ base }}/setup/boot-from-sda.fcc > {{ base }}/setup/boot-from-sda.ign
+    shell: ../ocp/butane < {{ base }}/setup/boot-from-sda.fcc > {{ base }}/setup/boot-from-sda.ign
 
 
 

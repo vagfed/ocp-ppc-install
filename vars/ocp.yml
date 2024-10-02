@@ -8,6 +8,7 @@ clustername: ocptest                            # name of OCP cluster
 
 # Internal OCP networks
 clusternetwork: 10.128.0.0/14
+clusternetworkprefix: 23
 servicenetwork: 172.80.0.0/16
 
 # External load balancer
@@ -26,3 +27,4 @@ balancer: 172.17.227.67
 # OpenShift installer and client. Change only if you need a specific one!
 ocp_installer: https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/stable/openshift-install-linux.tar.gz
 ocp_client: https://mirror.openshift.com/pub/openshift-v4/ppc64le/clients/ocp/latest/openshift-client-linux.tar.gz
+butane: https://mirror.openshift.com/pub/openshift-v4/clients/butane/latest/butane-ppc64le

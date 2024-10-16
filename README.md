@@ -68,7 +68,7 @@ All OCP LPARs must be on the same subnet. You must provide the IP name of the su
 ### nodes.yml
 This file identifies the bootnode, the three master nodes and the workers you want to install. For each LPAR you need to provide the name of the corresmponding LPAR as shown in the HMC, together with the hostname without any domain name.
 
-## ocp.yml
+### ocp.yml
 This file provides the primary OpenShift configuration details.
 
 `basedomain` represents the parent's DNS domain of the OCP cluster. All OCP nodes must belong to this domain and must be defined in DNS for both direct and reverse resolution. For example if `basedomain` is `power.seg.it.ibm.com` and a node has IP 10.10.1.1 and hostname `node1`, on DNS you need to have a resolution `node1.power.seg.it.ibm.com <-> 10.10.1.1`.
@@ -94,14 +94,14 @@ You can further tune your environment by providing YAML files into `ocp_custom_y
 Multipath I/O for disk will be enabled during installation and does not require any setup.
 
 ## Installation start
-Once you have provided all variables and customization, installation is started by running `ansible-playbook install_ocp.yml`. Installation will not ask any confirmation and will poweroff all involved LPAR before staring real installation.
+Once you have provided all variables and customization, installation is started by running `ansible-playbook install_ocp.yml`. Installation will not ask any confirmation and will poweroff all involved LPAR before starting the real installation.
 
-A successfull installation will require from 1 to 2 hours of time and will not require any user activity.
+A successfull installation will require about 1 hour of time on POWER10 systems and will not require any user activity.
 
 ## Configuration files required to manage the cluster
 The `OCP_DATA` directory will contain one directory for each cluster you create. If you run multiple time the scripts with the same clustername, the data will be completely rewritten.
 
-The `OCP_DATA/<clustername>` directory contains all the data useful to manage the OCP cluster and to know how it was installed. All files should be kept in a safe place. 
+The `OCP_DATA/<clustername>` directory contains all the data useful to manage the OCP cluster and to know how it was installed. All files should be kept in a safe place after installation. 
 - `install-config.yaml.backup`: the yaml file used to install the cluster
 - `ocp-rsa`: this is the private key you can use to log on OCP nodes using the `core` user (`ssh -i ocp-rsa core@<node>`)
 - `setup/auth/kubeconfig`: KUBECONFIG file to be used when executing the `oc` command
@@ -114,26 +114,26 @@ Installation is meant to run unattended and does not require any user interactio
 You may want to log on the LPARs to monitor the installation or just to see logs. In worst cases you may need to perform problem determination for failed installation.
 
 ### Console access.
-Do not attempt to access a LPAR's console before the LPAR has been started for installation. For example you can access the console of LPAR `TFV-OCPTEMP-boot` only after you see the dollowing message:
+Do not attempt to access a LPAR's console before the LPAR has been started for installation. For example you can safely access the console of LPAR `TFV-OCPTEMP-boot` only after you see the following message:
 
 ```
 TASK [Boot all LPARs and start network installation] *********************************************************************
 changed: [localhost] => (item={'lpar_name': 'TFV-OCPTEMP-boot', 'hostname': 'tfv-ocptemp-boot'})
 ```
 
-From the console you can only see console messages. You do not have any valid credential to log on the console.
+From the console you can only see console messages. You do not have any valid credential to log on the console. In order to use console you need to create a use in CoreOS or set `core` user's password, but this can be done after the cluster has been setup.
 
 
 ### SSH access as core user
 You can access anytime to any node as `core` use by using the generated SSH key. Of course you need to wait for SSH service to be started: console logs will tell you when.
 
-As `core` user you can use `sudo` to become `root` but you should avoid it unless you know ehat you are doing. The best way to monitor the installation is to use the `journalctl -f` command. When you log on bootstrap node you will see a better suggestion.
+As `core` user you can use `sudo` to become `root` but you should avoid it unless you know what you are doing. The best way to monitor the installation is to use the `journalctl -f` command. If you log on bootstrap node you will see a better suggestion directly on the prompt.
 
 
 ## Known installation issues
-Please use RHEL 9.4 or later. With previous versions the LPARs may fail to boot with error code `BA060030` on HMC when installing a new LPAR with virtual cores.
+Please use RHEL 9.4 or later. With previous RHEL versions the LPARs may fail to boot with error code `BA060030` on HMC when installing a new LPAR with virtual cores.
 
-If you encounter error code `BA060030` and you can not upgrade RHEL, the workaround is to modify the LPAR to use dedicated cores and restart the installation. Once OpenShift is installed, you can power off the LPAR and change the configuration to use virtual cores: when you start the LPAR again OpenShift will correctly work. If you ever installed on the same LPAR an operating system capable of using virtual CPUs, the issue should not appear regardless the version of RHEL.
+If you encounter error code `BA060030` and you can not upgrade RHEL, the workaround is to modify the LPAR to use dedicated cores and then restart the installation. Once OpenShift is installed, you can power off the LPAR and change the configuration to use virtual cores: when you start the LPAR again OpenShift will correctly work. If you ever installed on the same LPAR an operating system capable of using virtual CPUs, the issue should not appear regardless of RHEL's version.
 
 
 ## Sample log output

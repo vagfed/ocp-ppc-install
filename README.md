@@ -47,13 +47,13 @@ This file defines the `lpars` variable that defines all LPARs in the OCP cluster
 
 Suppose that you are adding a WORKER3 partition with IP address 10.1.1.1 on managed system SYSTEM1. The HMC that manages SYSTEM1 has been defined with the label HMC5 on `hmc.yml` file. In the `lpars.yml` file you need to have the following stanza:
 
-`
+```
 lpars:
   WORKER3:
     ip: 10.1.1.1
     hmc: HMC5
     managed_system: SYSTEM1
-`
+```
 
 The `network.yml` file located into the `vars` directory provides the network configuration of the network hosting the OCP LPAR and provide the IP address of the partition used for installation (bastion, thw host where ansible scripts will be run).
 

@@ -132,6 +132,7 @@ As `core` user you can use `sudo` to become `root` but you should avoid it unles
 
 ## Known installation issues
 Please use RHEL 9.3 or later. With previous versions the LPARs may fail to boot with error code BA060030 on HMC when installing a new LPAR with virtual cores.
+
 Previous RHEL versions have an issue in network boot images. If you can not upgrade RHEL the workaround is to modify the LPAR to use dedicated cores and restart the installation. Once OpenShift is installed, you can power off the LPAR and change the configuration to use virtual cores. When you start the LPAR again OpenShift will correctly work. If you ever installed on the same LPAR an operating system capable of using virtual CPUs, the OopenShift installation will complewte successfully.
 
 

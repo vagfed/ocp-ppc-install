@@ -1,3 +1,4 @@
+```
 nohup: ignoring input
 
 PLAY [Store known hosts of all HMCs] *******************************************
@@ -557,3 +558,4 @@ changed: [localhost]
 PLAY RECAP *********************************************************************
 localhost                  : ok=99   changed=48   unreachable=0    failed=0    skipped=12   rescued=6    ignored=0   
 
+```

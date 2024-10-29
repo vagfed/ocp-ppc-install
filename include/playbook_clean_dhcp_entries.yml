@@ -15,7 +15,7 @@
       path: /etc/dhcp/dhcpd.conf
       marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item['hostname'] }}"
       state: absent
-    loop: "{{ bootnode + masters + workers }}"
+    loop: "{{ bootnode + masters + workers | default([]) }}"
     register: dhcp_out
 
   - name: Restart DHCP

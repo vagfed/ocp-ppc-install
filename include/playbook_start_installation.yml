@@ -29,7 +29,7 @@
         {{ item['lpar_name'] }}
         {{ lpars[item['lpar_name']].profile | default('default_profile') }}
         {{ lpars[item['lpar_name']].managed_system }}
-    loop: "{{ bootnode + masters + workers }}"
+    loop: "{{ bootnode + masters + workers | default([]) }}"
     connection: local
 
   - name: Show next steps
@@ -59,6 +59,17 @@
       msg:
         - "Started: {{ job_result.start }}"
         - "Ended  : {{ job_result.end }}"
+
+  - name: Power off bootstrap node
+    powervm_lpar_instance:
+       hmc_host: "{{ hmc[lpars[item['lpar_name']].hmc].ip }}"
+       hmc_auth: "{{ hmc[lpars[item['lpar_name']].hmc].hmc_auth }}"
+       system_name: "{{ lpars[bootnode[0]['lpar_name']].managed_system }}"
+       vm_name: "{{ item['lpar_name'] }}"
+       action: shutdown
+       shutdown_option: Immediate
+    loop: "{{ bootnode }}"
+    connection: local
 
   - name: Software installation has been fully started
     debug:

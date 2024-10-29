@@ -26,7 +26,7 @@
           {{ item['lpar_name'] }}
           {{ lpars[item['lpar_name']].profile | default('default_profile') }}
           {{ lpars[item['lpar_name']].managed_system }}
-    loop: "{{ bootnode + masters + workers }}"
+    loop: "{{ bootnode + masters + workers | default([]) }}"
     register: lpar_data
 
   - name: Register MAC address

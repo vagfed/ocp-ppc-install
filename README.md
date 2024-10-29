@@ -26,16 +26,21 @@ Now clone the repository as ansible user.
 The required packages are installed running (once) the script `setup_ansible.sh`
 
 ## OpenShift LPAR creation 
-You need to create in advance all LPARs that will be used during OCP installation. A minimum set includes 1 bootstrap, 3 masters and 2 workers. If you plan to use infrastructure nodes, they will be installed as workers and you will change them as infrastructure nodes after installation completes.
+You need to create in advance all LPARs that will be used during OCP installation. A minimum set includes 1 bootstrap, 3 masters and 2 workers. 
 
 Each LPAR must have only 1 Ethernet adapter during installation time. Scripts have been tested with virtual Ethernet but should work with vNIC or other adapters. This procedure do not support more than one adapter: if you need additional adapters, they must be addded after OpenSHift installation.
 
 Each LPAR must have only one disk during installation time. Scripts will use `sda` disk as target disk and then will enable multipath. If multiple disks are present, it is not possible to choose the installation disk, so add disks after installation has completed.
 
+You have two configuration options:
+- Full cluster: 1 bootstrap node, 3 master nodes, at least 2 worketr nodes. Master nodes are not schedulable.
+- COmpact cluster: 1 bootstrap node, 3 master nodes that accept application workload (master nodes are schedulable)
+
+If you plan to use infrastructure nodes, they will be installed as workers and you will change them as infrastructure nodes after installation completes.
+
 ## Variable definitions
 
-You must be sure that the LPAR configuration and HMC definitions are current in 
-the `lpar.yml` and `hmc.yml` files located into the `vars` directory. You must provide your RedHat pull secret and store it in the `vars\pullsecret` file. Remember that file content is case sensitive.
+You must be sure that the LPAR configuration and HMC definitions are current in the files located into the `vars` directory. You must provide your RedHat pull secret and store it in the `vars\pullsecret` file. Remember that file content is case sensitive.
 
 The partition where Ansible scripts are executed will be configured ad BOOTP, TFTP and HTTP servers. The OCP LPAR will be installed using those protocols and firewall must not stop them. 
 
@@ -55,10 +60,9 @@ lpars:
     managed_system: SYSTEM1
 `
 
-The `network.yml` file located into the `vars` directory provides the network configuration of the network hosting the OCP LPAR and provide the IP address of the partition used for installation (bastion, thw host where ansible scripts will be run).
-
-The `ocp.yml` file located into the `vars` directory provides the OpenShift installation data. You need to provide your pull secret.
-
+You can find two samples for a full and compact cluster:
+- `SAMPLE_FULL_CLUSTER_lpars.yml`
+- `SAMPLE_COMPACT_CLUSTER_lpars.yml`
 
 ### network.yml
 This file defines the network configuration of all LPARs and the boot server (named `pxe_server`) from where you are running the scripts.
@@ -67,6 +71,12 @@ All OCP LPARs must be on the same subnet. You must provide the IP name of the su
 
 ### nodes.yml
 This file identifies the bootnode, the three master nodes and the workers you want to install. For each LPAR you need to provide the name of the corresmponding LPAR as shown in the HMC, together with the hostname without any domain name.
+
+You can find two samples for a full and compact cluster:
+- `SAMPLE_FULL_CLUSTER_nodes.yml`
+- `SAMPLE_COMPACT_CLUSTER_nodes.yml`
+
+Note that no workers are defined in compact cluster configuration.
 
 ## ocp.yml
 This file provides the primary OpenShift configuration details.
@@ -82,6 +92,14 @@ This file provides the primary OpenShift configuration details.
 The installation depends on internet access. If you need to specify an HTTP proxy, uncomment and update the `proxy` definition, together with all `http`, `https` and `noproxy` definitions (they all all mandatory). If you define a proxy server, OCP will route all outgoing traffing through the proxy: if you want to avoid proxy usage for an IP subnet ot DNS domain, provide noproxy information as shown in the example (see RedHat documentation for details).
 
 Do not change `ocp_installer` variable unless you know what are you doing.
+
+You can find two samples for a full and compact cluster:
+- `SAMPLE_FULL_CLUSTER_ocp.yml`
+- `SAMPLE_COMPACT_CLUSTER_ocp.yml`
+
+Note that for compact cluster the variable `masters_schedulable` is set to `true`.
+
+
 
 ### pullsecret
 This file in not present when you clone the repository but you must provide it before starting the installation. It is related to the email that owns a subscription and can be retrieved from `https://console.redhat.com/openshift/install/pull-secret`.

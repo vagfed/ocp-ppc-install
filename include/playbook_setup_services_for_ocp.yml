@@ -26,7 +26,7 @@
         }
       path: /etc/dhcp/dhcpd.conf
       marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item['hostname'] }}"
-    loop: "{{ bootnode + masters + workers }}"
+    loop: "{{ bootnode + masters + workers | default([]) }}"
     register: dhcp_out
 
   - name: Restart DHCP
@@ -52,7 +52,7 @@
       marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item['hostname'] }}"
       path: /var/lib/tftpboot/boot/grub2/grub.cfg
       create: true
-    loop: "{{ bootnode + masters + workers }}"
+    loop: "{{ bootnode + masters + workers | default([]) }}"
 
 
 

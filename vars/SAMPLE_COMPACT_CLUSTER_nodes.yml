@@ -15,16 +15,16 @@ masters:
 # A full cluster has at least 2 worker nodes
 # You may have a "compact" cluster with no workers but you must set "masters_schedulable: true" in nodes.yml
 # If you need infrastructure nodes, install them as worker and then transform them into infrastructure nodes
-workers:
-  - lpar_name: TFV-OCPTEMP-w1
-    hostname: tfv-ocptemp-w1
-  - lpar_name: TFV-OCPTEMP-w2
-    hostname: tfv-ocptemp-w2
-  - lpar_name: TFV-OCPTEMP-w3
-    hostname: tfv-ocptemp-w3
-  - lpar_name: TFV-OCPTEMP-i1
-    hostname: tfv-ocptemp-i1
-  - lpar_name: TFV-OCPTEMP-i2
-    hostname: tfv-ocptemp-i2
-  - lpar_name: TFV-OCPTEMP-i3
-    hostname: tfv-ocptemp-i3
+#workers:
+#  - lpar_name: TFV-OCPTEMP-w1
+#    hostname: tfv-ocptemp-w1
+#  - lpar_name: TFV-OCPTEMP-w2
+#    hostname: tfv-ocptemp-w2
+#  - lpar_name: TFV-OCPTEMP-w3
+#    hostname: tfv-ocptemp-w3
+#  - lpar_name: TFV-OCPTEMP-i1
+#    hostname: tfv-ocptemp-i1
+#  - lpar_name: TFV-OCPTEMP-i2
+#    hostname: tfv-ocptemp-i2
+#  - lpar_name: TFV-OCPTEMP-i3
+#    hostname: tfv-ocptemp-i3

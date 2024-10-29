@@ -7,6 +7,7 @@
 
   vars_files:
     - ../vars/ocp.yml
+    - ../vars/nodes.yml
 
   vars:
     base: ../OCP_DATA/{{ clustername }}
@@ -69,7 +70,7 @@
     replace:
       path: "{{ base }}/setup/manifests/cluster-scheduler-02-config.yml"
       regexp: '(\s+)mastersSchedulable:.*$'
-      replace: '\1mastersSchedulable: false'
+      replace: "\\1mastersSchedulable: {{ masters_schedulable }}"
 
   - name: Enable multipath on masters
     copy:

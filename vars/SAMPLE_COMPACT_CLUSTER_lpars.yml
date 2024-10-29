@@ -1,0 +1,52 @@
+# The lpars dictionary must have an entry for each LPAR, whose key is the LPAR name
+# For each LPAR you must provide ip, hmc label, managed system label and slot number of virtual ethernet
+#
+# Example:
+# lpars:
+#   <NAME OF LPAR IN HMC>:
+#     ip: <ADDRESS>
+#     hmc: <see hmcs.yml file. It is the key of hmc variable>
+#     managed_system: <Name of th emanaged system inside HMC>
+#     slot_number: <vitual slot number of virtual Ethernet used by the LPAR>
+#
+lpars:
+  TFV-OCPTEMP-boot:
+    ip: 172.17.227.61
+    hmc: vhmc-p901
+    managed_system: L922-seg
+  TFV-OCPTEMP-m1:
+    ip: 172.17.227.62
+    hmc: vhmc-p901
+    managed_system: L922-seg
+  TFV-OCPTEMP-m2:
+    ip: 172.17.227.63
+    hmc: vhmc-p901
+    managed_system: L922-seg
+  TFV-OCPTEMP-m3:
+    ip: 172.17.227.64
+    hmc: vhmc-p901
+    managed_system: L922-seg
+#  TFV-OCPTEMP-w1:
+#    ip: 172.17.227.65
+#    hmc: vhmc-p901
+#    managed_system: L922-seg
+#  TFV-OCPTEMP-w2:
+#    ip: 172.17.227.66
+#    hmc: vhmc-p901
+#    managed_system: L922-seg
+#  TFV-OCPTEMP-w3:
+#    ip: 172.17.227.69
+#    hmc: vhmc-p901
+#    managed_system: L922-seg
+#  TFV-OCPTEMP-i1:
+#    ip: 172.17.227.70
+#    hmc: vhmc-p901
+#    managed_system: Server-9009-22A-SN78C3200
+#  TFV-OCPTEMP-i2:
+#    ip: 172.17.227.71
+#    hmc: vhmc-p901
+#    managed_system: Server-9009-22A-SN78C3200
+#  TFV-OCPTEMP-i3:
+#    ip: 172.17.227.72
+#    hmc: vhmc-p901
+#    managed_system: Server-9009-22A-SN78C3200

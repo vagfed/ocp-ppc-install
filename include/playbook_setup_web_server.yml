@@ -30,6 +30,7 @@
       src: "{{ base }}/setup/worker.ign"
       dest: /var/www/html/{{ item['hostname'] }}-boot-coreos.ign
     loop: "{{ workers }}"
+    when: workers is defined
 
   - name: Copy sda boot ignition
     ansible.builtin.copy:

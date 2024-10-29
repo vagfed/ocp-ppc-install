@@ -14,7 +14,7 @@
     - name: Detect HMC IPs
       set_fact:
         hmc_names:  "{{ hmc_ip | default([]) + [item.value.hmc] }}"
-      loop: "{{ lookup('ansible.builtin.dict', lpars) }}"
+      loop: "{{ lpars | dict2items }}"
 
     - name: Scan ssh public keys of HMC
       shell: "ssh-keyscan {{ hmc[item].ip }}"

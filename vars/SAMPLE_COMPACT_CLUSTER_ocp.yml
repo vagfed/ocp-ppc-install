@@ -5,7 +5,7 @@
 # OCP will use domain <clusterdomain>.<basedomain>
 basedomain: power.seg.it.ibm.com		# base domain of cluster
 clustername: ocptest                            # name of OCP cluster
-masters_schedulable: false			# Set true on compact clusters (no workers)
+masters_schedulable: true			# Set true on compact clusters (no workers)
 
 # Internal OCP networks
 clusternetwork: 10.128.0.0/14			# Private network used by PODs

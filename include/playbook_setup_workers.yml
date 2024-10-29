@@ -27,7 +27,7 @@
     - name: Task completed
       debug:
         msg:
-          - "Ready workers: {{ command_output.stdout | int }}/{{ workers | length }}"
+          - "Ready workers: {{ command_output.stdout | int }}/{{ workers | default([])  | length }}"
           - "Cluster operators start deployment on available workers"
           - 'Monitor tasks with: oc get co'
           - 'Remember to set KUBECONFIG shell variable to OCP_DATA/{{ clustername }}/setup/auth/kubeconfig'

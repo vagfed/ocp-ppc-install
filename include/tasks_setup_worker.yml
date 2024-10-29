@@ -21,11 +21,11 @@
       ignore_errors: true
 
     - name: "Check completion - IT WILL FAIL AND WILL BE RETRIED MULTIPLE TIMES"
-      shell: "[ {{ command_output.stdout | int }} -eq {{ workers | length }} ]"
+      shell: "[ {{ command_output.stdout | int }} -eq {{ workers | default([]) | length }} ]"
       changed_when: false
 
   rescue:
-    - name: "Attempt: {{ attempt_number | int }}/{{ max_attempts }}. Ready workers: {{ command_output.stdout | int }}/{{ workers | length }}"
+    - name: "Attempt: {{ attempt_number | int }}/{{ max_attempts }}. Ready workers: {{ command_output.stdout | int }}/{{ workers | default([]) | length }}"
       fail:
         msg: Max attempt reached
       when: attempt_number | int == max_attempts | int 

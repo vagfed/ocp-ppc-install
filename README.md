@@ -28,19 +28,19 @@ The required packages are installed running (once) the script `setup_ansible.sh`
 ## OpenShift LPAR creation 
 You need to create in advance all LPARs that will be used during OCP installation. A minimum set includes 1 bootstrap, 3 masters and 2 workers. 
 
-Each LPAR must have only 1 Ethernet adapter during installation time. Scripts have been tested with virtual Ethernet but should work with vNIC or other adapters. This procedure do not support more than one adapter: if you need additional adapters, they must be addded after OpenSHift installation.
+Each LPAR must have only 1 Ethernet adapter during installation time. Scripts have been tested with virtual Ethernet but should work with vNIC or other adapters. This procedure does not support more than one adapter: if you need additional adapters, they must be addded after OpenShift installation.
 
 Each LPAR must have only one disk during installation time. Scripts will use `sda` disk as target disk and then will enable multipath. If multiple disks are present, it is not possible to choose the installation disk, so add disks after installation has completed.
 
 You have two configuration options:
-- Full cluster: 1 bootstrap node, 3 master nodes, at least 2 worketr nodes. Master nodes are not schedulable.
-- COmpact cluster: 1 bootstrap node, 3 master nodes that accept application workload (master nodes are schedulable)
+- *Full cluster*: 1 bootstrap node, 3 master nodes, at least 2 worketr nodes. Master nodes are not schedulable.
+- *Compact cluster*: 1 bootstrap node, 3 master nodes that accept application workload (master nodes are schedulable)
 
-If you plan to use infrastructure nodes, they will be installed as workers and you will change them as infrastructure nodes after installation completes.
+If you plan to use infrastructure nodes, you should install them as worker nodes and then change them as infrastructure nodes, after installation completes.
 
 ## Variable definitions
 
-You must be sure that the LPAR configuration and HMC definitions are current in the files located into the `vars` directory. You must provide your RedHat pull secret and store it in the `vars\pullsecret` file. Remember that file content is case sensitive.
+You must be sure that the LPAR configuration and HMC definitions are current in the files located into the `vars` directory. Remember that file content is case sensitive.
 
 The partition where Ansible scripts are executed will be configured ad BOOTP, TFTP and HTTP servers. The OCP LPAR will be installed using those protocols and firewall must not stop them. 
 
@@ -78,7 +78,7 @@ You can find two samples for a full and compact cluster:
 
 Note that no workers are defined in compact cluster configuration.
 
-## ocp.yml
+### ocp.yml
 This file provides the primary OpenShift configuration details.
 
 `basedomain` represents the parent's DNS domain of the OCP cluster. All OCP nodes must belong to this domain and must be defined in DNS for both direct and reverse resolution. For example if `basedomain` is `power.seg.it.ibm.com` and a node has IP 10.10.1.1 and hostname `node1`, on DNS you need to have a resolution `node1.power.seg.it.ibm.com <-> 10.10.1.1`.
@@ -107,9 +107,9 @@ This file in not present when you clone the repository but you must provide it b
 ## Advanced tuning
 The procedure will use the variables you define to create an OpenShift installation file. The template of the file is defined in `template\install_config.j2` that can be edited for advanced configuration.
 
-You can further tune your environment by providing YAML files into `ocp_custom_yaml`. They will be passed during installation. In the repository there are two files required in environments that use Virtual Ethernet through Shared Ethernet Adapter for OCP LPARs.
+You can further tune your environment by providing YAML files into `ocp_custom_yaml` directory. They will be passed during installation. In the repository there are two files required in environments that use Virtual Ethernet through Shared Ethernet Adapter for OCP LPARs.
 
-Multipath I/O for disk will be enabled during installation and does not require any setup.
+Multipath I/O for disk will be enabled during installation and it does not require any setup.
 
 ## Installation start
 Once you have provided all variables and customization, installation is started by running `ansible-playbook install_ocp.yml`. Installation will not ask any confirmation and will poweroff all involved LPAR before staring real installation.
@@ -132,14 +132,14 @@ Installation is meant to run unattended and does not require any user interactio
 You may want to log on the LPARs to monitor the installation or just to see logs. In worst cases you may need to perform problem determination for failed installation.
 
 ### Console access.
-Do not attempt to access a LPAR's console before the LPAR has been started for installation. For example you can access the console of LPAR `TFV-OCPTEMP-boot` only after you see the dollowing message:
+Do not attempt to access a LPAR's console before the LPAR has been started for installation. For example, you can access the console of LPAR `TFV-OCPTEMP-boot` only after you see the dollowing message:
 
 ```
 TASK [Boot all LPARs and start network installation] *********************************************************************
 changed: [localhost] => (item={'lpar_name': 'TFV-OCPTEMP-boot', 'hostname': 'tfv-ocptemp-boot'})
 ```
 
-From the console you can only see console messages. You do not have any valid credential to log on the console.
+From the console you can only see console messages. You do not have any valid credential to log on the node using console.
 
 
 ### SSH access as core user
@@ -150,11 +150,11 @@ As `core` user you can use `sudo` to become `root` but you should avoid it unles
 
 ## Known installation issues
 
-OpenShift code is not always configured with the proper authorization to run on a LPAR with virtual cores (it depends on OpenShift version). If you see on the HMC an error code BA060030, installation will not continue. In that case use HMC to modify the LPAR to use dedicated cores and restart the installation.
+Some Linux versions do not provide a network boot image capable of managing a LPAR configured with virtual cores. RHEL 9.4 does not have this issue and it is suggested to use it for the boot server.
 
-Once OpenShift is installed, you can power off the LPAR and change the configuration to use virtual cores. When you start the LPAR again OpenShift will correctly work.
+If you see on the HMC an error code BA060030, installation will not continue. In that case use HMC to modify the LPAR to use dedicated cores and restart the installation. Once OpenShift is installed, you can power off the LPAR and change the configuration to use virtual cores. When you start the LPAR again OpenShift will correctly work.
 
-If you ever installed on the same LPAR an operating system capable of using virtual CPUs, the OopenShift installation will complewte successfully.
+If you ever installed on the same LPAR an operating system capable of using virtual CPUs, this issue will not occur regardless the operating system used for the boot server.
 
 
 ## Sample log output

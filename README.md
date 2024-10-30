@@ -2,7 +2,7 @@
 
 Automated install of a full OpenShift cluster on IBM Power LPAR using Ansible. Internet access is required for all LPARs involved, with the option of using an HTTP proxy (with optional user/password).
 
-The scripts must be copied on an IBM Power LPAR configured with RHEL 9. Other Linux flavours should work but they may require some editing of scripts since some configuration files may be different. This LPAR will be configured to allow network installation of OpenShift cluster. This LPAR is ideally loacated in the same network of OCP cluster but it is not mandatory. 
+The scripts must be copied on an IBM Power LPAR configured with RHEL 9 (RHEL 9.4 is recommended). Other Linux flavours should work but they may require some editing of scripts since some configuration files may be different. This LPAR will be configured as a boot server to allow network installation of OpenShift cluster. This LPAR is ideally located in the same network of OCP cluster but it is not mandatory. 
 
 All LPARs in the OCP cluster must be located in the same subnet. They will use BOOTP, TFTP and HTTP protocols to contact the LPAR from where installation is started using the scripts, so routing is required and no firewall should be present. 
 
@@ -26,14 +26,14 @@ Now clone the repository as ansible user.
 The required packages are installed running (once) the script `setup_ansible.sh`
 
 ## OpenShift LPAR creation 
-You need to create in advance all LPARs that will be used during OCP installation. A minimum set includes 1 bootstrap, 3 masters and 2 workers. 
+You need to create in advance all LPARs that will be used during OCP installation.
 
-Each LPAR must have only 1 Ethernet adapter during installation time. Scripts have been tested with virtual Ethernet but should work with vNIC or other adapters. This procedure does not support more than one adapter: if you need additional adapters, they must be addded after OpenShift installation.
+Each LPAR must have only 1 Ethernet adapter during installation time. Scripts have been tested with virtual Ethernet but should work with vNIC or other adapters. This procedure does not support more than one adapter: if you need additional adapters, they must be added after OpenShift installation.
 
 Each LPAR must have only one disk during installation time. Scripts will use `sda` disk as target disk and then will enable multipath. If multiple disks are present, it is not possible to choose the installation disk, so add disks after installation has completed.
 
 You have two configuration options:
-- *Full cluster*: 1 bootstrap node, 3 master nodes, at least 2 worketr nodes. Master nodes are not schedulable.
+- *Full cluster*: 1 bootstrap node, 3 master nodes, at least 2 worker nodes. Master nodes are not schedulable.
 - *Compact cluster*: 1 bootstrap node, 3 master nodes that accept application workload (master nodes are schedulable)
 
 If you plan to use infrastructure nodes, you should install them as worker nodes and then change them as infrastructure nodes, after installation completes.
@@ -52,13 +52,13 @@ This file defines the `lpars` variable that defines all LPARs in the OCP cluster
 
 Suppose that you are adding a WORKER3 partition with IP address 10.1.1.1 on managed system SYSTEM1. The HMC that manages SYSTEM1 has been defined with the label HMC5 on `hmc.yml` file. In the `lpars.yml` file you need to have the following stanza:
 
-`
+```
 lpars:
   WORKER3:
     ip: 10.1.1.1
     hmc: HMC5
     managed_system: SYSTEM1
-`
+```
 
 You can find two samples for a full and compact cluster:
 - `SAMPLE_FULL_CLUSTER_lpars.yml`
@@ -67,10 +67,10 @@ You can find two samples for a full and compact cluster:
 ### network.yml
 This file defines the network configuration of all LPARs and the boot server (named `pxe_server`) from where you are running the scripts.
 
-All OCP LPARs must be on the same subnet. You must provide the IP name of the subnet and the netmask to be applied to each LPAR. I suggest you to use `https://www.calculator.net/ip-subnet-calculator.html`, insert the IP address on one LPAR, provide the netmask and it will compute the correst IP name of the subnet.
+All OCP LPARs must be on the same subnet. You must provide the IP name of the subnet and the netmask to be applied to each LPAR. I suggest you to use `https://www.calculator.net/ip-subnet-calculator.html`, insert the IP address on one LPAR, provide the netmask and it will compute the correct IP name of the subnet.
 
 ### nodes.yml
-This file identifies the bootnode, the three master nodes and the workers you want to install. For each LPAR you need to provide the name of the corresmponding LPAR as shown in the HMC, together with the hostname without any domain name.
+This file identifies the bootnode, the three master nodes and the workers you want to install. For each LPAR you need to provide the name of the corresponding LPAR as shown in the HMC, together with the hostname without any domain name.
 
 You can find two samples for a full and compact cluster:
 - `SAMPLE_FULL_CLUSTER_nodes.yml`
@@ -89,7 +89,7 @@ This file provides the primary OpenShift configuration details.
 
 `balancer` is the external load balancer that must be configured in advance to provide service to the OCP cluster. If it is not correctly configured, the installation will fail.
 
-The installation depends on internet access. If you need to specify an HTTP proxy, uncomment and update the `proxy` definition, together with all `http`, `https` and `noproxy` definitions (they all all mandatory). If you define a proxy server, OCP will route all outgoing traffing through the proxy: if you want to avoid proxy usage for an IP subnet ot DNS domain, provide noproxy information as shown in the example (see RedHat documentation for details).
+The installation depends on internet access. If you need to specify an HTTP proxy, uncomment and update the `proxy` definition, together with all `http`, `https` and `noproxy` definitions (they all all mandatory). If you define a proxy server, OCP will route all outgoing traffing through the proxy: if you want to avoid proxy usage for an IP subnet or DNS domain, provide noproxy information as shown in the example (see RedHat documentation for details).
 
 Do not change `ocp_installer` variable unless you know what are you doing.
 
@@ -112,14 +112,18 @@ You can further tune your environment by providing YAML files into `ocp_custom_y
 Multipath I/O for disk will be enabled during installation and it does not require any setup.
 
 ## Installation start
-Once you have provided all variables and customization, installation is started by running `ansible-playbook install_ocp.yml`. Installation will not ask any confirmation and will poweroff all involved LPAR before staring real installation.
+Once you have provided all variables and customization, installation is started by running the following command:
 
-A successfull installation will require from 1 to 2 hours of time and will not require any user activity.
+`ansible-playbook install_ocp.yml`
+
+Installation will not ask any confirmation and will poweroff all involved LPAR before staring real installation.
+
+On a cluster of 6 worker nodes running on Power S1022, installation was completed in 1 hour. No user activity is required. On Power S922 the same installation took 1.5 hours. OpenShift does not run on older POWER8 systems.
 
 ## Configuration files required to manage the cluster
-The `OCP_DATA` directory will contain one directory for each cluster you create. If you run multiple time the scripts with the same clustername, the data will be completely rewritten.
+After installation is completed, the `OCP_DATA` directory will contain all data needed to manage the cluster. The script will create one subdirectory with the name of the cluster you have created, allowing you to use the same script to install multiple clusters. If you run the script multiple time with the same clustername, the data will be completely rewritten.
 
-The `OCP_DATA/<clustername>` directory contains all the data useful to manage the OCP cluster and to know how it was installed. All files should be kept in a safe place. 
+The `OCP_DATA/<clustername>` directory contains installation information and all files should be kept in a safe place. 
 - `install-config.yaml.backup`: the yaml file used to install the cluster
 - `ocp-rsa`: this is the private key you can use to log on OCP nodes using the `core` user (`ssh -i ocp-rsa core@<node>`)
 - `setup/auth/kubeconfig`: KUBECONFIG file to be used when executing the `oc` command
@@ -145,16 +149,16 @@ From the console you can only see console messages. You do not have any valid cr
 ### SSH access as core user
 You can access anytime to any node as `core` use by using the generated SSH key. Of course you need to wait for SSH service to be started: console logs will tell you when.
 
-As `core` user you can use `sudo` to become `root` but you should avoid it unless you know ehat you are doing. The best way to monitor the installation is to use the `journalctl -f` command. When you log on bootstrap node you will see a better suggestion.
+As `core` user you can use `sudo` to become `root` but you should avoid it unless you know what you are doing. The best way to monitor the installation is to use the `journalctl -f` command. When you log on bootstrap node you will see a better suggestion.
 
 
 ## Known installation issues
 
 Some Linux versions do not provide a network boot image capable of managing a LPAR configured with virtual cores. RHEL 9.4 does not have this issue and it is suggested to use it for the boot server.
 
-If you see on the HMC an error code BA060030, installation will not continue. In that case use HMC to modify the LPAR to use dedicated cores and restart the installation. Once OpenShift is installed, you can power off the LPAR and change the configuration to use virtual cores. When you start the LPAR again OpenShift will correctly work.
+If you see on the HMC an error code `BA060030`, installation will not continue. In that case use HMC to modify the LPAR to use dedicated cores and restart the installation. Once OpenShift is installed, you can power off the LPAR and change the configuration to use virtual cores: when you start the LPAR again OpenShift will correctly work.
 
-If you ever installed on the same LPAR an operating system capable of using virtual CPUs, this issue will not occur regardless the operating system used for the boot server.
+If you ever installed on the same LPAR an operating system capable of using virtual CPUs, this issue will not occur regardless the operating system used for the boot server. A new LPAR running on virtual cores require an operating system capable of using them.
 
 
 ## Sample log output

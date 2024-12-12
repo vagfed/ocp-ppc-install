@@ -16,9 +16,10 @@ servicenetwork: 172.80.0.0/16			# Private network used by services
 balancer: 172.17.227.67
 
 # Proxy server for all egress traffic (required for proxied installation)
-# Uncomment only if needed, all lines are required
+# Uncomment only if needed, all 4 lines are required and must be present, with the provided indentation
 # NOTE: add to no proxy all local subnets and local domains or everything will go through proxy
 #       Proxy is a cluster wide setup and includes also not HTTP/HTTPS ports (ex. 2379)
+#       If you no not need to specify a no proxy configuration leave just square brakets (noproxy: [])
 #proxy:
 #  http: "http://172.17.227.57:3128" # syntax is "http://<username>:<pswd>@<ip>:<port>"
 #  https: "http://172.17.227.57:3128" # syntax is "https://<username>:<pswd>@<ip>:<port>"

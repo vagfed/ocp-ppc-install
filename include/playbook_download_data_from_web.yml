@@ -10,7 +10,7 @@
 
   vars:
     rhbaseurl: https://mirror.openshift.com/pub/openshift-v4/ppc64le/dependencies/rhcos/latest
-    kernel: "{{ rhbaseurl }}/rhcos-live-kernel-ppc64le"
+    kernel: "{{ rhbaseurl }}/rhcos-live-kernel.ppc64le"
     initramfs: "{{ rhbaseurl }}/rhcos-live-initramfs.ppc64le.img"
     rootfs: "{{ rhbaseurl }}/rhcos-live-rootfs.ppc64le.img"
     use_proxy: false
